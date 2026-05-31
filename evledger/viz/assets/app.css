@@ -1,0 +1,482 @@
+/* Ledger viz SPA styles (viz-frontend-core).
+ *
+ * Owns the shell layout: header status, filter panel, scroll/zoom timeline,
+ * and the sortable data table. The flame graph (viz-frontend-flame) will add
+ * its own section below the timeline; layout leaves room for it. Vanilla CSS,
+ * no build step, no external fonts.
+ */
+
+:root {
+  color-scheme: light dark;
+  --fg: #1c1c1e;
+  --muted: #6b6b70;
+  --bg: #ffffff;
+  --panel: #f4f4f6;
+  --panel-2: #ebebef;
+  --border: #d8d8de;
+  --accent: #3b6ea5;
+  --accent-soft: rgba(59, 110, 165, 0.18);
+  --grid: rgba(0, 0, 0, 0.08);
+  --row-hover: rgba(59, 110, 165, 0.1);
+  --row-focus: rgba(59, 110, 165, 0.22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e6e6ea;
+    --muted: #9a9aa2;
+    --bg: #16161a;
+    --panel: #202028;
+    --panel-2: #2a2a34;
+    --border: #34343e;
+    --accent: #7fb0e0;
+    --accent-soft: rgba(127, 176, 224, 0.22);
+    --grid: rgba(255, 255, 255, 0.1);
+    --row-hover: rgba(127, 176, 224, 0.12);
+    --row-focus: rgba(127, 176, 224, 0.26);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.4;
+  font-size: 14px;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+button {
+  font: inherit;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
+
+/* ---- header ---- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem clamp(0.75rem, 2vw, 1.5rem);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.app-status {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-right: auto;
+}
+
+.app-status.error {
+  color: #c0392b;
+}
+
+/* ---- live controls (viz-live) ---- */
+.live-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.live-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+}
+
+/* When live, the toggle reads as an "active" pill. */
+.live-toggle.is-live {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.live-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: 0 0 auto;
+}
+
+/* Pulsing dot while polling; static while paused. */
+.live-toggle.is-live .live-dot {
+  background: #2ecc71;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.5); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 4px rgba(46, 204, 113, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-toggle.is-live .live-dot { animation: none; }
+}
+
+.live-new {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.live-follow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.live-follow input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ---- filters ---- */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.7rem clamp(0.75rem, 2vw, 1.5rem);
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.filters-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 0.8rem;
+}
+
+.filters.collapsed .filters-body {
+  display: none;
+}
+
+.filters-toggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.filters-toggle:hover {
+  color: var(--fg);
+}
+
+.filters-toggle .caret {
+  transition: transform 0.15s ease;
+}
+
+.filters.collapsed .filters-toggle .caret {
+  transform: rotate(-90deg);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.field input,
+.field select {
+  font: inherit;
+  font-size: 0.85rem;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.45rem;
+  min-width: 9rem;
+}
+
+.field-narrow input,
+.field-narrow select {
+  min-width: 5rem;
+}
+
+.field-actions {
+  flex-direction: row;
+  gap: 0.4rem;
+}
+
+/* ---- timeline ---- */
+.timeline-wrap {
+  position: relative;
+  flex: 1 1 40%;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+}
+
+.timeline-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem clamp(0.75rem, 2vw, 1.5rem);
+  background: var(--panel-2);
+  font-size: 0.78rem;
+}
+
+.timeline-toolbar .hint {
+  color: var(--muted);
+}
+
+.timeline {
+  flex: 1 1 auto;
+  width: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.timeline.dragging {
+  cursor: grabbing;
+}
+
+.tl-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  max-width: 22rem;
+  padding: 0.35rem 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+}
+
+.tl-tooltip .tt-type {
+  font-weight: 600;
+}
+
+.tl-tooltip .tt-time {
+  color: var(--muted);
+}
+
+/* ---- flame graph ---- */
+.flame-wrap {
+  position: relative;
+  flex: 1 1 30%;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+}
+
+.flame-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem clamp(0.75rem, 2vw, 1.5rem);
+  background: var(--panel-2);
+  font-size: 0.78rem;
+}
+
+.flame-toolbar .flame-title {
+  font-weight: 600;
+}
+
+.flame-toolbar .hint {
+  color: var(--muted);
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flame {
+  flex: 1 1 auto;
+  width: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.flame.dragging {
+  cursor: grabbing;
+}
+
+/* ---- table ---- */
+.table-wrap {
+  flex: 1 1 40%;
+  min-height: 120px;
+  overflow: auto;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.events-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.events-table th.num,
+.events-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.events-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.events-table th.sortable:hover {
+  color: var(--accent);
+}
+
+.events-table th .arrow {
+  margin-left: 0.25rem;
+  color: var(--accent);
+}
+
+.events-table tbody td {
+  padding: 0.3rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.events-table tbody tr {
+  cursor: pointer;
+}
+
+.events-table tbody tr:hover {
+  background: var(--row-hover);
+}
+
+.events-table tbody tr.focused {
+  background: var(--row-focus);
+}
+
+/* Rows linked to the focused event (its start↔end pair + data neighbors). */
+.events-table tbody tr.linked {
+  background: var(--row-hover);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.events-table tbody tr.focused.linked {
+  background: var(--row-focus);
+}
+
+/* Newly-arrived rows flash in (viz-live). The class is removed after the
+ * animation so the highlight is transient and doesn't fight focus/linked. */
+.events-table tbody tr.just-arrived td {
+  animation: row-flash 1.6s ease-out;
+}
+
+@keyframes row-flash {
+  0% { background: var(--accent-soft); }
+  100% { background: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .events-table tbody tr.just-arrived td { animation: none; }
+}
+
+.events-table td.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+}
+
+.events-table td.data-cell {
+  color: var(--muted);
+  max-width: 52ch;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  min-width: 24ch;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  margin-right: 0.4rem;
+  vertical-align: -1px;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 1.5rem !important;
+}

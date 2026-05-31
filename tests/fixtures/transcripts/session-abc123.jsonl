@@ -1,0 +1,9 @@
+{"type":"summary","summary":"Refactor the loader","leafUuid":"u0"}
+{"type":"user","uuid":"u1","sessionId":"session-abc123","timestamp":"2026-05-30T10:00:00Z","message":{"role":"user","content":"Please refactor the transcript loader to be tolerant of malformed lines."}}
+{"type":"assistant","uuid":"u2","sessionId":"session-abc123","timestamp":"2026-05-30T10:00:05Z","message":{"role":"assistant","content":[{"type":"text","text":"I'll start by reading the existing loader."},{"type":"tool_use","id":"t1","name":"Read","input":{"file_path":"/x/loader.py"}}]}}
+{"type":"user","uuid":"u3","sessionId":"session-abc123","timestamp":"2026-05-30T10:00:06Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"...big file contents that should be dropped..."}]}}
+{"type":"assistant","uuid":"u4","sessionId":"session-abc123","timestamp":"2026-05-30T10:00:10Z","message":{"role":"assistant","content":[{"type":"thinking","thinking":"private chain of thought that must not reach the audit"},{"type":"text","text":"Done. I made the loader skip malformed lines."}]}}
+
+this line is not valid json and must be skipped
+{"type":"file-history-snapshot","uuid":"u5","messageId":"m1","snapshot":{"trackedFileBackups":{}}}
+{"type":"user","uuid":"u6","sessionId":"session-abc123","timestamp":"2026-05-30T11:30:00Z","message":{"role":"user","content":"Looks good, thanks."}}

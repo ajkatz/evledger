@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "evledger"
+version = "0.1.0"
+description = "A git-backed, append-only, machine-partitioned CloudEvents 1.0 event ledger (JSONL) — library, CLI, MCP server, and read-only web visualizer. Stdlib-only core."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Andrew Katz" }]
+keywords = ["cloudevents", "event-ledger", "append-only", "audit-log", "jsonl", "observability", "mcp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: System :: Logging",
+]
+# The core library is pure standard library — no runtime dependencies.
+dependencies = []
+
+[project.optional-dependencies]
+cli = [
+    "click>=8.0",
+]
+mcp = [
+    "mcp>=1.2",
+]
+dev = [
+    "click>=8.0",
+    "pytest>=7.0",
+    "ruff>=0.4",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+evledger = "evledger.cli:ledger_group"
+evledger-mcp = "evledger.mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["evledger"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["mcp.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers"

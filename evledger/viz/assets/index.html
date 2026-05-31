@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>claude-kg · ledger viz</title>
+    <link rel="stylesheet" href="/static/app.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>claude-kg · ledger viz</h1>
+      <div class="app-status" id="status" role="status" aria-live="polite">loading…</div>
+      <div class="live-controls">
+        <button id="live-toggle" type="button" class="live-toggle is-live"
+                aria-pressed="true" title="poll for new events">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span class="live-label">live</span>
+        </button>
+        <button id="live-new" type="button" class="live-new ghost" hidden
+                title="jump to the newest events">0 new</button>
+        <label class="live-follow" title="keep the timeline framed on the newest events">
+          <input id="live-follow" type="checkbox" />
+          <span>follow</span>
+        </label>
+      </div>
+    </header>
+
+    <section class="filters" id="filters" aria-label="filters">
+      <button id="filters-toggle" type="button" class="filters-toggle"
+              aria-expanded="true" aria-controls="filters-body" title="show/hide filters">
+        <span class="caret" aria-hidden="true">▾</span> filters
+      </button>
+      <div class="filters-body" id="filters-body">
+        <label class="field">
+          <span>source</span>
+          <select id="f-source"><option value="">all</option></select>
+        </label>
+        <label class="field">
+          <span>type</span>
+          <select id="f-type"><option value="">all</option></select>
+        </label>
+        <label class="field">
+          <span>machine</span>
+          <select id="f-machine"><option value="">all</option></select>
+        </label>
+        <label class="field">
+          <span>since</span>
+          <input id="f-since" type="text" placeholder="ISO8601 / date" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>until</span>
+          <input id="f-until" type="text" placeholder="ISO8601 / date" autocomplete="off" />
+        </label>
+        <label class="field field-narrow">
+          <span>limit</span>
+          <input id="f-limit" type="number" min="0" step="1" placeholder="all" autocomplete="off" />
+        </label>
+        <label class="field field-narrow">
+          <span>lanes by</span>
+          <select id="f-laneby">
+            <option value="source">source</option>
+            <option value="type">type</option>
+          </select>
+        </label>
+        <div class="field field-actions">
+          <button id="f-apply" type="button">apply</button>
+          <button id="f-reset" type="button" class="ghost">reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline-wrap" aria-label="timeline">
+      <div class="timeline-toolbar">
+        <span class="hint">↔ scroll = pan · ↕ wheel = zoom · drag = pan</span>
+        <button id="tl-fit" type="button" class="ghost">fit</button>
+      </div>
+      <canvas id="timeline" class="timeline"></canvas>
+      <div id="tl-tooltip" class="tl-tooltip" hidden></div>
+    </section>
+
+    <section class="flame-wrap" aria-label="flame graph">
+      <div class="flame-toolbar">
+        <span class="flame-title">flame graph</span>
+        <span class="hint">spans = start↔end pairs · ↔ scroll = pan · ↕ wheel = zoom · shares the timeline view</span>
+        <button id="fl-fit" type="button" class="ghost">fit</button>
+      </div>
+      <canvas id="flame" class="flame"></canvas>
+      <div id="fl-tooltip" class="tl-tooltip" hidden></div>
+    </section>
+
+    <section class="table-wrap" aria-label="events">
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th data-sort="time" class="sortable">time</th>
+            <th data-sort="source" class="sortable">source</th>
+            <th data-sort="type" class="sortable">type</th>
+            <th data-sort="machine" class="sortable">machine</th>
+            <th data-sort="seq" class="sortable num">seq</th>
+            <th>data</th>
+          </tr>
+        </thead>
+        <tbody id="events-body">
+          <tr><td colspan="6" class="empty">loading…</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
