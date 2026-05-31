@@ -32,7 +32,6 @@ from evledger.mcp import (
     resolve_ledger_root,
 )
 
-
 # --- root resolution (pure) -----------------------------------------------
 
 

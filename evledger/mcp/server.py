@@ -45,7 +45,7 @@ if TYPE_CHECKING:  # pragma: no cover - type-checking only, no runtime import
 SERVER_NAME = "claude-kg-ledger"
 
 
-def build_server(root: Path | str | None = None) -> "FastMCP":
+def build_server(root: Path | str | None = None) -> FastMCP:
     """Build a `FastMCP` server with the three ledger tools bound to ``root``.
 
     The ``mcp`` SDK is imported **here**, lazily, so that importing this module

@@ -7,6 +7,7 @@ nothing and never mutates the frozen events.
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
 from datetime import timedelta
 from pathlib import Path
 
@@ -14,7 +15,6 @@ import pytest
 
 from evledger import (
     DurationStats,
-    EventRate,
     LedgerEvent,
     PairedDuration,
     Pairing,
@@ -386,11 +386,11 @@ def test_duration_stats_from_seconds_directly() -> None:
 
 def test_stats_results_are_frozen() -> None:
     rate = event_rate([_event()])
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         rate.count = 99  # type: ignore[misc]
 
     pairing = Pairing(durations=(), unmatched_starts=(), unmatched_ends=())
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         pairing.durations = ()  # type: ignore[misc]
 
 

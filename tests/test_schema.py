@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import FrozenInstanceError
 from datetime import datetime, timezone
 
 import pytest
@@ -132,7 +133,7 @@ def test_new_event_defaults_data_to_none() -> None:
 def test_ledger_event_is_frozen() -> None:
     event = new_event(source="/m/s", type="t", machine="m")
 
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         event.type = "other"  # type: ignore[misc]
 
 

@@ -248,7 +248,8 @@ class LedgerVizHandler(BaseHTTPRequestHandler):
 
     @property
     def _root(self) -> Path:
-        return self.server.ledger_root  # type: ignore[attr-defined]
+        root: Path = self.server.ledger_root  # type: ignore[attr-defined]
+        return root
 
     def _respond(self, status: int, content_type: str, body: bytes) -> None:
         self.send_response(status)

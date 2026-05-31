@@ -62,7 +62,8 @@ def resolve_machine_id(
     Returns:
         A non-empty machine-id string.
     """
-    env = os.environ if env is None else env  # type: ignore[assignment]
+    if env is None:
+        env = dict(os.environ)
     id_file = default_id_file() if id_file is None else id_file
     hostname = socket.gethostname() if hostname is None else hostname
 

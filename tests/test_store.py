@@ -5,12 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from evledger import (
     LedgerEvent,
     LedgerStore,
-    ReadResult,
     new_event,
 )
 

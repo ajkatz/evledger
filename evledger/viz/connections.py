@@ -286,7 +286,7 @@ def derive_links(events: Iterable[LedgerEvent]) -> tuple[Link, ...]:
             groups[(key, value)].append(event.id)
 
     for (key, _value), ids in groups.items():
-        for a, b in zip(ids, ids[1:]):
+        for a, b in zip(ids, ids[1:], strict=False):
             links.append(Link(from_event_id=a, to_event_id=b, kind=f"data:{key}"))
 
     return tuple(links)

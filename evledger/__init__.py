@@ -186,7 +186,41 @@ Public symbols
 
 from __future__ import annotations
 
+from evledger.digest import (
+    CLAUDE_DIGEST_CONFIG,
+    Anomaly,
+    Digest,
+    DigestConfig,
+    Notable,
+    ResourceTotals,
+    Rollup,
+    anomalies,
+    digest,
+    flag_could_have_asked,
+    flag_failures,
+    flag_push_without_green,
+    flag_refusals,
+    flag_token_outliers,
+    rollup,
+)
 from evledger.machine import resolve_machine_id
+from evledger.query import Query, query_events
+from evledger.reconstruct import (
+    AUDIT_SOURCE,
+    AgentSdkModelClient,
+    AuditResult,
+    CandidateEvent,
+    ModelClient,
+    ModelUnavailableError,
+    NecessityLabel,
+    ReconstructConfig,
+    build_audit_prompt,
+    dedup_candidates,
+    existing_signatures,
+    parse_audit_response,
+    reconstruct_chunks,
+    to_ledger_event,
+)
 from evledger.registry import SchemaValidationError, TypeRegistry
 from evledger.schema import (
     LedgerEvent,
@@ -195,7 +229,6 @@ from evledger.schema import (
     now_utc,
     parse_time,
 )
-from evledger.query import Query, query_events
 from evledger.stats import (
     DurationStats,
     EventRate,
@@ -215,39 +248,6 @@ from evledger.transcript import (
     chunk_turns,
     default_projects_root,
     load_transcripts,
-)
-from evledger.digest import (
-    CLAUDE_DIGEST_CONFIG,
-    Anomaly,
-    Digest,
-    DigestConfig,
-    Notable,
-    ResourceTotals,
-    Rollup,
-    anomalies,
-    digest,
-    flag_could_have_asked,
-    flag_failures,
-    flag_push_without_green,
-    flag_refusals,
-    flag_token_outliers,
-    rollup,
-)
-from evledger.reconstruct import (
-    AUDIT_SOURCE,
-    AgentSdkModelClient,
-    AuditResult,
-    CandidateEvent,
-    ModelClient,
-    ModelUnavailableError,
-    NecessityLabel,
-    ReconstructConfig,
-    build_audit_prompt,
-    dedup_candidates,
-    existing_signatures,
-    parse_audit_response,
-    reconstruct_chunks,
-    to_ledger_event,
 )
 
 __all__ = [

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
@@ -398,7 +399,7 @@ def test_query_writes_nothing_to_disk(tmp_path: Path) -> None:
 
 def test_query_is_frozen(tmp_path: Path) -> None:
     q = Query(type="t")
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         q.type = "other"  # type: ignore[misc]
 
 

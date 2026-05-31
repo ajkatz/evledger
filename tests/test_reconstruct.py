@@ -42,7 +42,6 @@ from evledger.reconstruct import (
 )
 from evledger.transcript import TranscriptTurn
 
-
 # --- fakes + builders -----------------------------------------------------
 
 

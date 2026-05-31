@@ -21,12 +21,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import click
 import pytest
 from click.testing import CliRunner
 
-import click
-
-from evledger import LedgerStore, Query, new_event, query_events
+from evledger import LedgerStore, new_event
 from evledger.cli import ledger_group, resolve_ledger_root
 from evledger.reconstruct import ModelUnavailableError
 

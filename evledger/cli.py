@@ -75,7 +75,6 @@ from evledger import (
     counts_by_source,
     counts_by_type,
     dedup_candidates,
-    digest as compute_digest,
     event_rate,
     existing_signatures,
     load_transcripts,
@@ -85,6 +84,9 @@ from evledger import (
     reconstruct_chunks,
     resolve_machine_id,
     to_ledger_event,
+)
+from evledger import (
+    digest as compute_digest,
 )
 
 #: Environment variable consulted for the ledger instance root.
@@ -149,7 +151,8 @@ def _parse_data(raw: str | None) -> Any | None:
 
 def _event_to_dict(event: Any) -> dict[str, Any]:
     """Render an event as its CloudEvents dict (for JSON output)."""
-    return event.to_dict()
+    result: dict[str, Any] = event.to_dict()
+    return result
 
 
 def _format_event_line(event: Any) -> str:
@@ -241,7 +244,9 @@ def log_cmd(
 @click.option("--machine", default=None, help="Filter: exact machine partition key.")
 @click.option("--since", default=None, help="Inclusive lower time bound (ISO-8601, Z or offset).")
 @click.option("--until", default=None, help="Exclusive upper time bound (ISO-8601, Z or offset).")
-@click.option("--limit", type=int, default=None, help="Cap the number of events shown (most-recent-last order preserved).")
+@click.option(
+    "--limit", type=int, default=None, help="Cap the number of events shown (most-recent-last order preserved)."
+)
 @_ledger_root_option
 @click.option("--format", "fmt", type=click.Choice(["text", "json"]), default="text", show_default=True)
 def show_cmd(
@@ -643,9 +648,15 @@ def _echo_audit_text(payload: dict[str, Any]) -> None:
 
 
 @ledger_group.command(name="audit")
-@click.option("--since", default=None, help="Inclusive lower time bound for the transcript window (ISO-8601, Z or offset).")
-@click.option("--until", default=None, help="Exclusive upper time bound for the transcript window (ISO-8601, Z or offset).")
-@click.option("--session", "session_id", default=None, help="Audit only the transcript whose session id (filename stem) matches.")
+@click.option(
+    "--since", default=None, help="Inclusive lower time bound for the transcript window (ISO-8601, Z or offset)."
+)
+@click.option(
+    "--until", default=None, help="Exclusive upper time bound for the transcript window (ISO-8601, Z or offset)."
+)
+@click.option(
+    "--session", "session_id", default=None, help="Audit only the transcript whose session id (filename stem) matches."
+)
 @click.option(
     "--dry-run/--no-dry-run",
     default=True,
@@ -666,7 +677,9 @@ def _echo_audit_text(payload: dict[str, Any]) -> None:
     help="Per-chunk model token budget (transcript turns are packed into chunks of this size).",
 )
 @click.option("--model", default=None, help="Opaque model identifier passed through to the model client.")
-@click.option("--machine", default=None, help="Machine partition key for appended events. Default: resolved machine id.")
+@click.option(
+    "--machine", default=None, help="Machine partition key for appended events. Default: resolved machine id."
+)
 @_ledger_root_option
 @click.option("--format", "fmt", type=click.Choice(["text", "json"]), default="text", show_default=True)
 def audit_cmd(

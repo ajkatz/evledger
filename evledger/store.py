@@ -240,7 +240,7 @@ class _PartitionLock:
         if _HAVE_FCNTL:
             fcntl.flock(self._fd, fcntl.LOCK_EX)
         else:  # pragma: no cover - Windows fallback
-            msvcrt.locking(self._fd, msvcrt.LK_LOCK, 1)
+            msvcrt.locking(self._fd, msvcrt.LK_LOCK, 1)  # type: ignore[attr-defined]
         return self
 
     def __exit__(self, *exc: object) -> None:
@@ -249,7 +249,7 @@ class _PartitionLock:
                 if _HAVE_FCNTL:
                     fcntl.flock(self._fd, fcntl.LOCK_UN)
                 else:  # pragma: no cover - Windows fallback
-                    msvcrt.locking(self._fd, msvcrt.LK_UNLCK, 1)
+                    msvcrt.locking(self._fd, msvcrt.LK_UNLCK, 1)  # type: ignore[attr-defined]
             finally:
                 os.close(self._fd)
                 self._fd = None
