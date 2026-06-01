@@ -698,3 +698,40 @@ def test_audit_text_output_reports_necessity(
     assert "Necessity report:" in result.output
     assert "[rote] permission.requested" in result.output
     assert "decision.autonomous" in result.output
+
+
+# --- ledger serve (host wiring) -------------------------------------------
+
+
+def test_serve_forwards_host_and_port(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """`serve --host 0.0.0.0 --port N` threads both through to viz.server.serve."""
+    import evledger.viz.server as viz
+
+    captured: dict[str, object] = {}
+
+    def fake_serve(*, root: Path, port: int, host: str, open_browser: bool) -> None:
+        captured.update(root=root, port=port, host=host, open_browser=open_browser)
+
+    monkeypatch.setattr(viz, "serve", fake_serve)
+    result = CliRunner().invoke(
+        cli,
+        ["ledger", "serve", "--host", "0.0.0.0", "--port", "9999", "--no-open",
+         "--ledger-root", str(tmp_path / "ledger")],
+    )
+    assert result.exit_code == 0, result.output
+    assert captured["host"] == "0.0.0.0"
+    assert captured["port"] == 9999
+    assert captured["open_browser"] is False
+
+
+def test_serve_defaults_to_localhost(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """With no --host, serve binds localhost (safe default)."""
+    import evledger.viz.server as viz
+
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(viz, "serve", lambda **kw: captured.update(kw))
+    result = CliRunner().invoke(
+        cli, ["ledger", "serve", "--no-open", "--ledger-root", str(tmp_path / "ledger")]
+    )
+    assert result.exit_code == 0, result.output
+    assert captured["host"] == "127.0.0.1"

@@ -78,6 +78,7 @@ evledger show --type 'com.example.*' --since 2026-05-01 --limit 50
 evledger stats --by type --pair          # counts + paired *.start/*.end durations
 evledger digest --since 2026-05-01        # deterministic rollup + anomaly flags
 evledger serve                            # read-only web visualizer (localhost)
+evledger serve --host 0.0.0.0 --no-open   # expose the (read-only) dashboard on the LAN/Tailscale
 ```
 
 The ledger root resolves via `--ledger-root` → `$CLAUDE_LEDGER_ROOT` →

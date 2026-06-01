@@ -789,25 +789,34 @@ def audit_cmd(
 
 
 @ledger_group.command(name="serve")
-@click.option("--port", type=int, default=8765, show_default=True, help="Localhost TCP port to bind.")
+@click.option("--port", type=int, default=8765, show_default=True, help="TCP port to bind.")
+@click.option(
+    "--host",
+    default="127.0.0.1",
+    show_default=True,
+    help="Interface to bind. Default is localhost-only; pass 0.0.0.0 to expose the "
+    "(read-only) viz on the LAN/Tailscale — e.g. for an always-on dashboard.",
+)
 @click.option("--no-open", "no_open", is_flag=True, help="Do not open the visualizer in a browser.")
 @_ledger_root_option
 def serve_cmd(
     port: int,
+    host: str,
     no_open: bool,
     repo_root: Path,
     ledger_root: Path | None,
 ) -> None:
     """Serve a read-only local web visualizer over the ledger.
 
-    Starts a stdlib ``http.server`` bound to localhost that serves a single-page
+    Starts a stdlib ``http.server`` (localhost by default) that serves a single-page
     app plus JSON APIs (``/api/events``, ``/api/spans``, ``/api/meta``) backed by
-    the ledger query/derivation layers. Best-effort opens a browser (suppress
-    with ``--no-open``). Never writes the ledger; Ctrl-C to stop.
+    the ledger query/derivation layers. Pass ``--host 0.0.0.0`` to expose it on the
+    LAN/Tailscale (it is read-only — it never writes the ledger). Best-effort opens
+    a browser (suppress with ``--no-open``). Ctrl-C to stop.
     """
     # Imported lazily so the rest of the CLI never pays the http.server import
     # cost (and so the viz layer stays an optional, isolated consumer).
     from evledger.viz.server import serve
 
     root = resolve_ledger_root(ledger_root, repo_root.resolve())
-    serve(root=root, port=port, open_browser=not no_open)
+    serve(root=root, port=port, host=host, open_browser=not no_open)
