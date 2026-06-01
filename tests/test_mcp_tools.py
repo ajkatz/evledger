@@ -5,7 +5,8 @@ temporary ledger root — no ``mcp`` SDK involved (the handlers carry no such
 dependency; that is the next task's concern). Coverage:
 
 * :func:`resolve_ledger_root` — explicit ``root`` wins, else
-  ``$CLAUDE_LEDGER_ROOT``, else ``<cwd>/ledger``; blank env falls through.
+  ``$CLAUDE_LEDGER_ROOT``, else the per-user default (XDG data dir); blank env
+  falls through.
 * :func:`ledger_log` — appends a CloudEvent (``id`` / ``time`` / ``seq``
   filled), coerces JSON-string and object ``data``, honors an explicit machine,
   and persists to the resolved root.
@@ -55,14 +56,21 @@ def test_resolve_root_env_when_no_arg(tmp_path: Path) -> None:
     assert out == envroot
 
 
-def test_resolve_root_blank_env_falls_through_to_cwd_ledger(tmp_path: Path) -> None:
-    out = resolve_ledger_root(root=None, env={"CLAUDE_LEDGER_ROOT": "   "}, cwd=tmp_path)
-    assert out == tmp_path / "ledger"
+def test_resolve_root_blank_env_falls_through_to_default(tmp_path: Path) -> None:
+    out = resolve_ledger_root(
+        root=None,
+        env={"CLAUDE_LEDGER_ROOT": "   ", "XDG_DATA_HOME": str(tmp_path)},
+        cwd=tmp_path,
+    )
+    assert out == tmp_path / "evledger" / "ledger"
 
 
-def test_resolve_root_default_is_cwd_ledger(tmp_path: Path) -> None:
-    out = resolve_ledger_root(root=None, env={}, cwd=tmp_path)
-    assert out == tmp_path / "ledger"
+def test_resolve_root_default_is_user_data_dir(tmp_path: Path) -> None:
+    # No root, no env: per-user data dir, NOT cwd-relative. cwd is ignored.
+    out = resolve_ledger_root(
+        root=None, env={"XDG_DATA_HOME": str(tmp_path)}, cwd=tmp_path / "elsewhere"
+    )
+    assert out == tmp_path / "evledger" / "ledger"
 
 
 # --- ledger_log -----------------------------------------------------------

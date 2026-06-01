@@ -14,7 +14,7 @@ cheap and SDK-free; the SDK is only pulled in when :func:`build_server` (or
 no top-level ``mcp`` import.
 
 The three tools are registered against a fixed ledger root captured at launch
-(``--ledger-root`` flag → ``$CLAUDE_LEDGER_ROOT`` → ``<cwd>/ledger``, via
+(``--ledger-root`` flag → ``$CLAUDE_LEDGER_ROOT`` → ``~/.local/share/evledger/ledger``, via
 :func:`~evledger.mcp.tools.resolve_ledger_root`). MCP clients pass only
 the per-call tool arguments; the root is server-side configuration, not a tool
 parameter. Tool return values are the plain JSON-serializable dicts/lists the
@@ -56,7 +56,7 @@ def build_server(root: Path | str | None = None) -> FastMCP:
     Args:
         root: The ledger instance root to bind every tool to. ``None`` resolves
             via :func:`~evledger.mcp.tools.resolve_ledger_root`
-            (``$CLAUDE_LEDGER_ROOT`` → ``<cwd>/ledger``).
+            (``$CLAUDE_LEDGER_ROOT`` → ``~/.local/share/evledger/ledger``).
 
     Returns:
         A configured `FastMCP` instance, ready for ``.run()``.
@@ -145,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     """Console-script entry point: resolve the ledger root and serve over stdio.
 
     Parses ``--ledger-root`` (falling back to ``$CLAUDE_LEDGER_ROOT`` →
-    ``<cwd>/ledger`` inside :func:`build_server`), builds the FastMCP server, and
+    ``~/.local/share/evledger/ledger`` inside :func:`build_server`), builds the FastMCP server, and
     runs it on the stdio transport — the form Claude Desktop and ``uvx``/``pipx``
     launchers expect.
 
@@ -169,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help=(
             "Ledger instance root. Defaults to $CLAUDE_LEDGER_ROOT, else "
-            "<cwd>/ledger."
+            "~/.local/share/evledger/ledger."
         ),
     )
     args = parser.parse_args(argv)

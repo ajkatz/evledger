@@ -10,7 +10,7 @@ Exercises the group via Click's :class:`CliRunner`:
 * ``ledger stats`` reports counts (by type / source), event rate, and (with
   ``--pair``) paired ``*.start``/``*.end`` durations.
 * Root resolution: ``--ledger-root`` flag wins, else ``$CLAUDE_LEDGER_ROOT``,
-  else ``<repo-root>/ledger``.
+  else the per-user default (XDG data dir).
 
 These cover the public CLI surface; the ledger core layers have their own
 unit tests, so this focuses on wiring + output shape.
@@ -70,14 +70,20 @@ def test_resolve_ledger_root_blank_env_falls_through(tmp_path: Path) -> None:
     out = resolve_ledger_root(
         ledger_root=None,
         repo_root=tmp_path,
-        env={"CLAUDE_LEDGER_ROOT": "   "},
+        env={"CLAUDE_LEDGER_ROOT": "   ", "XDG_DATA_HOME": str(tmp_path)},
     )
-    assert out == tmp_path / "ledger"
+    assert out == tmp_path / "evledger" / "ledger"
 
 
-def test_resolve_ledger_root_default_repo_root_ledger(tmp_path: Path) -> None:
-    out = resolve_ledger_root(ledger_root=None, repo_root=tmp_path, env={})
-    assert out == tmp_path / "ledger"
+def test_resolve_ledger_root_default_is_user_data_dir(tmp_path: Path) -> None:
+    # No flag, no env: the default is the per-user data dir, NOT repo-relative.
+    # repo_root is passed but must be ignored (retained only for compatibility).
+    out = resolve_ledger_root(
+        ledger_root=None,
+        repo_root=tmp_path / "repo",
+        env={"XDG_DATA_HOME": str(tmp_path)},
+    )
+    assert out == tmp_path / "evledger" / "ledger"
 
 
 # --- ledger log -----------------------------------------------------------

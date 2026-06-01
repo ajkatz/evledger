@@ -204,6 +204,7 @@ from evledger.digest import (
     rollup,
 )
 from evledger.machine import resolve_machine_id
+from evledger.paths import LEDGER_ROOT_ENV_VAR, default_ledger_root
 from evledger.query import Query, query_events
 from evledger.reconstruct import (
     AUDIT_SOURCE,
@@ -261,6 +262,8 @@ __all__ = [
     "SchemaValidationError",
     "LedgerStore",
     "ReadResult",
+    "default_ledger_root",
+    "LEDGER_ROOT_ENV_VAR",
     "Query",
     "query_events",
     "count_by",

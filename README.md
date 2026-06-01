@@ -81,8 +81,13 @@ evledger serve                            # read-only web visualizer (localhost)
 evledger serve --host 0.0.0.0 --no-open   # expose the (read-only) dashboard on the LAN/Tailscale
 ```
 
-The ledger root resolves via `--ledger-root` → `$CLAUDE_LEDGER_ROOT` →
-`<cwd>/ledger`.
+The ledger root resolves via `--ledger-root` → `$CLAUDE_LEDGER_ROOT` → the
+per-user default `$XDG_DATA_HOME/evledger/ledger` (else
+`~/.local/share/evledger/ledger`). The default is a stable per-user location,
+**not** `<cwd>/ledger` — so a tool run from any directory writes to the one
+ledger instead of splintering events into per-directory ones. Point several
+machines at one root (or sync each machine's partition to a master) to
+aggregate.
 
 ## MCP server
 
@@ -100,7 +105,8 @@ evledger-mcp --ledger-root ~/.local/share/evledger
 ```
 
 The ledger root is **server-side configuration** (captured at launch via
-`--ledger-root` → `$CLAUDE_LEDGER_ROOT` → `<cwd>/ledger`), not a tool argument.
+`--ledger-root` → `$CLAUDE_LEDGER_ROOT` → the per-user
+`~/.local/share/evledger/ledger`), not a tool argument.
 
 ## Web visualizer
 

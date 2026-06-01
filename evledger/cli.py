@@ -39,8 +39,9 @@ Three subcommands:
 
 Every subcommand resolves the ledger *instance* root (Decision 8) via
 :func:`resolve_ledger_root`: the ``--ledger-root`` flag, else
-``$CLAUDE_LEDGER_ROOT``, else ``<repo-root>/ledger`` (``--repo-root`` defaults
-to the current directory). No hardcoded ``~/.claude`` path.
+``$CLAUDE_LEDGER_ROOT``, else the per-user default
+``~/.local/share/evledger/ledger`` (see
+:func:`evledger.paths.default_ledger_root`). No hardcoded ``~/.claude`` path.
 
 All three support ``--format {text,json}`` (default ``text``), matching the
 existing CLI output convention.
@@ -88,9 +89,7 @@ from evledger import (
 from evledger import (
     digest as compute_digest,
 )
-
-#: Environment variable consulted for the ledger instance root.
-LEDGER_ROOT_ENV_VAR = "CLAUDE_LEDGER_ROOT"
+from evledger.paths import LEDGER_ROOT_ENV_VAR, default_ledger_root
 
 #: Recognized ``--rate-unit`` values mapped to their :class:`~datetime.timedelta`.
 _RATE_UNITS: dict[str, timedelta] = {
@@ -112,14 +111,18 @@ def resolve_ledger_root(
 
     1. The explicit ``--ledger-root`` flag, if given.
     2. The ``$CLAUDE_LEDGER_ROOT`` environment variable, if set and non-blank.
-    3. ``<repo-root>/ledger`` as the generic default.
+    3. The per-user default :func:`~evledger.paths.default_ledger_root`
+       (``$XDG_DATA_HOME/evledger/ledger``, else
+       ``~/.local/share/evledger/ledger``).
 
-    No hardcoded ``~/.claude`` path: the only home-relative default lives in
-    the machine-id resolver, not here.
+    The default is a stable per-user location, **not** ``<cwd>/ledger`` — so a
+    tool invoked from any directory writes to the one ledger instead of
+    splintering events into per-directory ledgers.
 
     Args:
         ledger_root: The value of the ``--ledger-root`` flag (``None`` if unset).
-        repo_root: The repo root used to derive the default ``ledger/`` path.
+        repo_root: Retained for backward compatibility; no longer used (the
+            default is now per-user, not repo-relative).
         env: Environment mapping to read ``$CLAUDE_LEDGER_ROOT`` from. Defaults
             to ``os.environ``.
 
@@ -132,7 +135,7 @@ def resolve_ledger_root(
     env_value = environ.get(LEDGER_ROOT_ENV_VAR)
     if env_value is not None and env_value.strip():
         return Path(env_value)
-    return repo_root / "ledger"
+    return default_ledger_root(environ)
 
 
 def _parse_data(raw: str | None) -> Any | None:
@@ -176,7 +179,8 @@ def ledger_group() -> None:
     descriptive aggregations; ``digest`` is a deterministic oversight report;
     ``audit`` is the model-powered oversight pass that reconstructs the
     oversight events the live self-emit layer missed. The instance root resolves
-    via ``--ledger-root`` → ``$CLAUDE_LEDGER_ROOT`` → ``<repo-root>/ledger``.
+    via ``--ledger-root`` → ``$CLAUDE_LEDGER_ROOT`` → the per-user default
+    (``~/.local/share/evledger/ledger``).
 
     To expose these same operations to MCP clients (Claude Desktop, other
     agents) over stdio, install the optional MCP extra and run the dedicated
@@ -191,13 +195,13 @@ def _ledger_root_option(fn):  # type: ignore[no-untyped-def]
         "--ledger-root",
         type=click.Path(file_okay=False, path_type=Path),
         default=None,
-        help="Ledger instance root. Default: $CLAUDE_LEDGER_ROOT, else <repo-root>/ledger.",
+        help="Ledger instance root. Default: $CLAUDE_LEDGER_ROOT, else ~/.local/share/evledger/ledger.",
     )(fn)
     fn = click.option(
         "--repo-root",
         type=click.Path(exists=True, file_okay=False, path_type=Path),
         default=Path("."),
-        help="Repo root (default: cwd). Used to derive the default <repo-root>/ledger.",
+        help="Deprecated and unused for ledger resolution (kept for backward compatibility).",
     )(fn)
     return fn
 
