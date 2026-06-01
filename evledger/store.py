@@ -88,7 +88,7 @@ class LedgerStore:
     Args:
         root: The ledger root directory (the ``ledger/`` *instance*). Created
             on first append. No default — the caller supplies it (e.g. from a
-            ``--ledger-root`` flag or ``$CLAUDE_LEDGER_ROOT``), so the store
+            ``--ledger-root`` flag or ``$EVLEDGER_ROOT``), so the store
             stays free of any hardcoded path.
 
     A single :class:`LedgerStore` is safe to share across threads, and

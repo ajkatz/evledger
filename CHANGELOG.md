@@ -4,6 +4,19 @@ All notable changes to **evledger** are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/) (pre-1.0: minor bumps may carry
 breaking changes, called out below).
 
+## 0.3.0
+
+### Added
+
+- **`$EVLEDGER_ROOT` environment variable** for the explicit ledger root, so the
+  package is no longer claude-specific. Resolution order is now
+  `--ledger-root`/`root` → **`$EVLEDGER_ROOT`** → legacy **`$CLAUDE_LEDGER_ROOT`**
+  → the per-user default. The legacy variable still works as a back-compat alias.
+  New public helpers: `evledger.env_ledger_root()` and
+  `LEGACY_LEDGER_ROOT_ENV_VARS`; `LEDGER_ROOT_ENV_VAR` is now `"EVLEDGER_ROOT"`.
+- **`py.typed` marker** (PEP 561) — consumers' type checkers now see evledger's
+  types instead of treating it as untyped.
+
 ## 0.2.0
 
 ### Changed (breaking)

@@ -23,7 +23,7 @@ passed through to the ledger's own parsers (which accept ``Z`` or numeric
 offsets).
 
 Ledger-root resolution mirrors the CLI: explicit ``root`` argument →
-``$CLAUDE_LEDGER_ROOT`` → the per-user default ``~/.local/share/evledger/ledger``
+``$EVLEDGER_ROOT`` → the per-user default ``~/.local/share/evledger/ledger``
 (see :func:`evledger.paths.default_ledger_root`). There is no hardcoded
 ``~/.claude`` path here.
 """
@@ -48,7 +48,7 @@ from evledger import (
     query_events,
     resolve_machine_id,
 )
-from evledger.paths import LEDGER_ROOT_ENV_VAR, default_ledger_root
+from evledger.paths import default_ledger_root, env_ledger_root
 
 #: Recognized ``rate_unit`` values mapped to their :class:`~datetime.timedelta`.
 _RATE_UNITS: dict[str, timedelta] = {
@@ -69,7 +69,7 @@ def resolve_ledger_root(
     Resolution order (Decision 5, adapted for a server with no repo-root):
 
     1. The explicit ``root`` argument, if given.
-    2. The ``$CLAUDE_LEDGER_ROOT`` environment variable, if set and non-blank.
+    2. The ``$EVLEDGER_ROOT`` environment variable, if set and non-blank.
     3. The per-user default :func:`~evledger.paths.default_ledger_root`
        (``$XDG_DATA_HOME/evledger/ledger``, else
        ``~/.local/share/evledger/ledger``).
@@ -81,7 +81,7 @@ def resolve_ledger_root(
     Args:
         root: An explicit ledger root (e.g. from a launcher ``--ledger-root``
             flag). ``None`` to fall through to the env var / default.
-        env: Environment mapping to read ``$CLAUDE_LEDGER_ROOT`` from. Defaults
+        env: Environment mapping to read ``$EVLEDGER_ROOT`` from. Defaults
             to :data:`os.environ`.
         cwd: Retained for backward compatibility; no longer used (the default is
             now per-user, not cwd-relative).
@@ -93,8 +93,8 @@ def resolve_ledger_root(
     if root is not None:
         return Path(root)
     environ = os.environ if env is None else env
-    env_value = environ.get(LEDGER_ROOT_ENV_VAR)
-    if env_value is not None and env_value.strip():
+    env_value = env_ledger_root(environ)
+    if env_value is not None:
         return Path(env_value)
     return default_ledger_root(environ)
 
@@ -145,7 +145,7 @@ def ledger_log(
             non-JSON string is stored verbatim). ``None`` = no payload.
         machine: Machine partition key. ``None`` resolves via
             :func:`~evledger.resolve_machine_id`.
-        root: Explicit ledger root; else ``$CLAUDE_LEDGER_ROOT``; else the
+        root: Explicit ledger root; else ``$EVLEDGER_ROOT``; else the
             per-user default ``~/.local/share/evledger/ledger``.
         env: Environment mapping (root + machine-id resolution). Defaults to
             :data:`os.environ`.
@@ -193,7 +193,7 @@ def ledger_query(
         limit: Cap on the number of events returned. The most-recent ``limit``
             events (last in ``(time, seq)`` order) are kept; ``0`` returns none;
             ``None`` / negative returns all.
-        root: Explicit ledger root; else ``$CLAUDE_LEDGER_ROOT``; else the
+        root: Explicit ledger root; else ``$EVLEDGER_ROOT``; else the
             per-user default ``~/.local/share/evledger/ledger``.
         env: Environment mapping (root resolution). Defaults to
             :data:`os.environ`.
@@ -246,7 +246,7 @@ def ledger_stats(
             ``hour`` (default) / ``day``.
         pair: When ``True``, also pair ``*.start`` / ``*.end`` events and
             summarize their durations under a ``"durations"`` key.
-        root: Explicit ledger root; else ``$CLAUDE_LEDGER_ROOT``; else the
+        root: Explicit ledger root; else ``$EVLEDGER_ROOT``; else the
             per-user default ``~/.local/share/evledger/ledger``.
         env: Environment mapping (root resolution). Defaults to
             :data:`os.environ`.

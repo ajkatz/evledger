@@ -39,7 +39,7 @@ Three subcommands:
 
 Every subcommand resolves the ledger *instance* root (Decision 8) via
 :func:`resolve_ledger_root`: the ``--ledger-root`` flag, else
-``$CLAUDE_LEDGER_ROOT``, else the per-user default
+``$EVLEDGER_ROOT``, else the per-user default
 ``~/.local/share/evledger/ledger`` (see
 :func:`evledger.paths.default_ledger_root`). No hardcoded ``~/.claude`` path.
 
@@ -89,7 +89,7 @@ from evledger import (
 from evledger import (
     digest as compute_digest,
 )
-from evledger.paths import LEDGER_ROOT_ENV_VAR, default_ledger_root
+from evledger.paths import default_ledger_root, env_ledger_root
 
 #: Recognized ``--rate-unit`` values mapped to their :class:`~datetime.timedelta`.
 _RATE_UNITS: dict[str, timedelta] = {
@@ -110,7 +110,7 @@ def resolve_ledger_root(
     Resolution order:
 
     1. The explicit ``--ledger-root`` flag, if given.
-    2. The ``$CLAUDE_LEDGER_ROOT`` environment variable, if set and non-blank.
+    2. ``$EVLEDGER_ROOT`` (or the legacy ``$CLAUDE_LEDGER_ROOT``), if non-blank.
     3. The per-user default :func:`~evledger.paths.default_ledger_root`
        (``$XDG_DATA_HOME/evledger/ledger``, else
        ``~/.local/share/evledger/ledger``).
@@ -123,7 +123,7 @@ def resolve_ledger_root(
         ledger_root: The value of the ``--ledger-root`` flag (``None`` if unset).
         repo_root: Retained for backward compatibility; no longer used (the
             default is now per-user, not repo-relative).
-        env: Environment mapping to read ``$CLAUDE_LEDGER_ROOT`` from. Defaults
+        env: Environment mapping to read ``$EVLEDGER_ROOT`` from. Defaults
             to ``os.environ``.
 
     Returns:
@@ -132,8 +132,8 @@ def resolve_ledger_root(
     if ledger_root is not None:
         return ledger_root
     environ = env if env is not None else os.environ
-    env_value = environ.get(LEDGER_ROOT_ENV_VAR)
-    if env_value is not None and env_value.strip():
+    env_value = env_ledger_root(environ)
+    if env_value is not None:
         return Path(env_value)
     return default_ledger_root(environ)
 
@@ -179,7 +179,7 @@ def ledger_group() -> None:
     descriptive aggregations; ``digest`` is a deterministic oversight report;
     ``audit`` is the model-powered oversight pass that reconstructs the
     oversight events the live self-emit layer missed. The instance root resolves
-    via ``--ledger-root`` → ``$CLAUDE_LEDGER_ROOT`` → the per-user default
+    via ``--ledger-root`` → ``$EVLEDGER_ROOT`` → the per-user default
     (``~/.local/share/evledger/ledger``).
 
     To expose these same operations to MCP clients (Claude Desktop, other
@@ -195,7 +195,7 @@ def _ledger_root_option(fn):  # type: ignore[no-untyped-def]
         "--ledger-root",
         type=click.Path(file_okay=False, path_type=Path),
         default=None,
-        help="Ledger instance root. Default: $CLAUDE_LEDGER_ROOT, else ~/.local/share/evledger/ledger.",
+        help="Ledger instance root. Default: $EVLEDGER_ROOT, else ~/.local/share/evledger/ledger.",
     )(fn)
     fn = click.option(
         "--repo-root",

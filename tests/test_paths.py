@@ -8,7 +8,26 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from evledger.paths import default_ledger_root
+from evledger.paths import default_ledger_root, env_ledger_root
+
+
+def test_env_root_prefers_evledger_root() -> None:
+    out = env_ledger_root(env={"EVLEDGER_ROOT": "/a", "CLAUDE_LEDGER_ROOT": "/b"})
+    assert out == "/a"
+
+
+def test_env_root_falls_back_to_legacy_claude_var() -> None:
+    out = env_ledger_root(env={"CLAUDE_LEDGER_ROOT": "/legacy"})
+    assert out == "/legacy"
+
+
+def test_env_root_ignores_blank_values() -> None:
+    out = env_ledger_root(env={"EVLEDGER_ROOT": "   ", "CLAUDE_LEDGER_ROOT": "/b"})
+    assert out == "/b"
+
+
+def test_env_root_none_when_unset() -> None:
+    assert env_ledger_root(env={}) is None
 
 
 def test_default_uses_xdg_data_home_when_set(tmp_path: Path) -> None:

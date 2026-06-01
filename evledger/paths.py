@@ -11,8 +11,26 @@ import os
 from collections.abc import Mapping
 from pathlib import Path
 
-#: Environment variable consulted for an explicit ledger instance root.
-LEDGER_ROOT_ENV_VAR = "CLAUDE_LEDGER_ROOT"
+#: Primary environment variable for an explicit ledger instance root.
+LEDGER_ROOT_ENV_VAR = "EVLEDGER_ROOT"
+#: Legacy alias(es), consulted after the primary for backward compatibility.
+#: ``CLAUDE_LEDGER_ROOT`` predates the package's extraction from claude-config.
+LEGACY_LEDGER_ROOT_ENV_VARS: tuple[str, ...] = ("CLAUDE_LEDGER_ROOT",)
+
+
+def env_ledger_root(env: Mapping[str, str] | None = None) -> str | None:
+    """Return an explicit ledger root from the environment, or ``None``.
+
+    Checks :data:`LEDGER_ROOT_ENV_VAR` (``EVLEDGER_ROOT``) first, then each of
+    :data:`LEGACY_LEDGER_ROOT_ENV_VARS` (``CLAUDE_LEDGER_ROOT``). Blank/whitespace
+    values are ignored (treated as unset), and the first non-blank value wins.
+    """
+    environ = os.environ if env is None else env
+    for name in (LEDGER_ROOT_ENV_VAR, *LEGACY_LEDGER_ROOT_ENV_VARS):
+        value = environ.get(name)
+        if value is not None and value.strip():
+            return value
+    return None
 
 
 def default_ledger_root(env: Mapping[str, str] | None = None) -> Path:

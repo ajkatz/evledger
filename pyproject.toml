@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "evledger"
-version = "0.2.0"
+version = "0.3.0"
 description = "A git-backed, append-only, machine-partitioned CloudEvents 1.0 event ledger (JSONL) — library, CLI, MCP server, and read-only web visualizer. Stdlib-only core."
 readme = "README.md"
 requires-python = ">=3.10"
