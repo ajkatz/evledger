@@ -4,6 +4,23 @@ All notable changes to **evledger** are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/) (pre-1.0: minor bumps may carry
 breaking changes, called out below).
 
+## 0.4.0
+
+### Added
+
+- **CloudEvents `subject`** — an optional, standard context attribute on
+  `LedgerEvent` / `new_event`: a short human-readable headline so consumers and
+  dashboards can label an event without unpacking `data`. Round-trips through
+  `to_dict`/`from_dict` (omitted when unset).
+- **Visualizer `project` filter** — events from one logical project often arrive
+  under several `source` strings (a repo basename varies by working directory).
+  The viz now derives a coarse *project* key (the leading alphanumeric token of
+  `source`, case-folded) so e.g. `festcal` / `festcal-service` / `FestCal`
+  collapse into one selectable group. New: `?project=` on `/api/events` and
+  `/api/spans`, a `projects` list in `/api/meta`, and a PROJECT dropdown.
+- **Visualizer `subject` column** — a sortable column surfacing the new
+  `subject`, so rows are self-describing at a glance.
+
 ## 0.3.0
 
 ### Added
