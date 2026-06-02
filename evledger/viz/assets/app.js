@@ -34,6 +34,7 @@
     liveToggle: $("live-toggle"),
     liveNew: $("live-new"),
     liveFollow: $("live-follow"),
+    project: $("f-project"),
     source: $("f-source"),
     type: $("f-type"),
     machine: $("f-machine"),
@@ -168,6 +169,7 @@
       const res = await fetch("/api/meta");
       if (!res.ok) throw new Error("HTTP " + res.status);
       const meta = await res.json();
+      fillSelect(els.project, meta.projects || []);
       fillSelect(els.source, meta.sources || []);
       fillSelect(els.type, meta.types || []);
       fillSelect(els.machine, meta.machines || []);
@@ -194,6 +196,7 @@
   // events-only cap), so the flame graph reflects exactly the filtered set.
   function buildFilterParams() {
     const p = new URLSearchParams();
+    if (els.project.value) p.set("project", els.project.value);
     if (els.source.value) p.set("source", els.source.value);
     if (els.type.value) p.set("type", els.type.value);
     if (els.machine.value) p.set("machine", els.machine.value);
@@ -1439,6 +1442,7 @@
   }
 
   function resetFilters() {
+    els.project.value = "";
     els.source.value = "";
     els.type.value = "";
     els.machine.value = "";
@@ -1466,7 +1470,7 @@
     });
 
     // Dropdowns re-query immediately; text/number inputs apply on Enter.
-    for (const sel of [els.source, els.type, els.machine]) {
+    for (const sel of [els.project, els.source, els.type, els.machine]) {
       sel.addEventListener("change", applyFilters);
     }
     // Re-lane without re-querying.

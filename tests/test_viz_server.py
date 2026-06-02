@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from evledger import LedgerEvent, LedgerStore, new_event
-from evledger.viz.server import ASSETS_DIR, handle, make_server
+from evledger.viz.server import ASSETS_DIR, _project_of, handle, make_server
 
 
 def _event(
@@ -157,6 +157,82 @@ def test_events_bad_limit_is_ignored(ledger_root: Path) -> None:
     assert _json(body)["count"] == 3
 
 
+# --- project grouping (over the source field) -----------------------------
+
+
+@pytest.mark.parametrize(
+    "source, project",
+    [
+        ("festcal", "festcal"),
+        ("festcal-service", "festcal"),  # repo basename varies by cwd...
+        ("FestCal", "festcal"),  # ...and case folds together
+        ("music-visualizer", "music"),
+        ("claude-config", "claude"),
+        ("/laptop/sys", "laptop"),  # path-style sources group on first token
+        ("", ""),  # no alphanumeric content -> empty group, not an error
+    ],
+)
+def test_project_of_groups_source_variants(source: str, project: str) -> None:
+    assert _project_of(source) == project
+
+
+@pytest.fixture
+def festcal_root(tmp_path: Path) -> Path:
+    """A ledger whose festcal work is fragmented across three source strings.
+
+    Mirrors the real ledger: the same project surfaces as ``festcal`` (explicit
+    emit), ``festcal-service`` (backend repo basename), and ``FestCal`` (Android
+    repo basename), alongside an unrelated ``evledger`` event.
+    """
+    root = tmp_path / "ledger"
+    store = LedgerStore(root=root)
+    for i, src in enumerate(["festcal", "festcal-service", "FestCal", "evledger"]):
+        store.append(
+            _event(
+                type="dev.claude.task.shipped",
+                time=f"2026-06-02T00:0{i}:00Z",
+                id=src,
+                source=src,
+            )
+        )
+    return root
+
+
+def test_events_filters_by_project(festcal_root: Path) -> None:
+    _status, _ct, body = handle(
+        "/api/events", {"project": ["festcal"]}, festcal_root
+    )
+
+    payload = _json(body)
+    # All three festcal source variants, and only those (evledger excluded).
+    assert payload["count"] == 3
+    assert {e["id"] for e in payload["events"]} == {
+        "festcal",
+        "festcal-service",
+        "FestCal",
+    }
+
+
+def test_meta_projects_collapse_festcal_variants(festcal_root: Path) -> None:
+    _status, _ct, body = handle("/api/meta", {}, festcal_root)
+
+    payload = _json(body)
+    # Four distinct sources collapse to two projects.
+    assert len(payload["sources"]) == 4
+    assert payload["projects"] == ["evledger", "festcal"]
+
+
+def test_spans_respect_project_filter(festcal_root: Path) -> None:
+    # Project filter applies to spans too (same selection feeds the flame graph).
+    _status, _ct, body = handle(
+        "/api/spans", {"project": ["evledger"]}, festcal_root
+    )
+    payload = _json(body)
+    # Only the lone evledger event survives -> no start/end pair -> no spans.
+    assert set(payload) == {"spans", "links"}
+    assert payload["spans"] == []
+
+
 # --- /api/spans -----------------------------------------------------------
 
 
@@ -211,6 +287,8 @@ def test_meta_returns_sorted_distinct_values(ledger_root: Path) -> None:
     assert status == 200
     payload = _json(body)
     assert payload["sources"] == ["/desktop/notes", "/laptop/sys"]
+    # Project = leading alphanumeric token of source, case-folded.
+    assert payload["projects"] == ["desktop", "laptop"]
     assert payload["types"] == [
         "dev.claude.mission.end",
         "dev.claude.mission.start",
@@ -224,7 +302,12 @@ def test_meta_empty_ledger(tmp_path: Path) -> None:
     status, _ct, body = handle("/api/meta", {}, tmp_path / "nope")
 
     assert status == 200
-    assert _json(body) == {"sources": [], "types": [], "machines": []}
+    assert _json(body) == {
+        "sources": [],
+        "projects": [],
+        "types": [],
+        "machines": [],
+    }
 
 
 # --- static assets + routing ---------------------------------------------

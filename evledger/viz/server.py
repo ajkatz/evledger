@@ -20,13 +20,15 @@ Routes
 * ``GET /`` → the SPA ``index.html`` (``text/html``).
 * ``GET /static/<asset>`` → a static asset from the bundled :mod:`assets`
   directory (``app.js`` / ``app.css`` / etc.), content type by extension.
-* ``GET /api/events?source=&type=&machine=&since=&until=&limit=`` →
+* ``GET /api/events?source=&project=&type=&machine=&since=&until=&limit=`` →
   ``{"count": N, "events": [<CloudEvents dict>, ...]}`` via
-  :func:`~evledger.query_events`.
+  :func:`~evledger.query_events`. ``project`` is a viz-level grouping over
+  ``source`` (the leading token, case-folded), applied as a post-filter.
 * ``GET /api/spans?<same filters>`` → ``{"spans": [...], "links": [...]}`` from
   :func:`~evledger.viz.connections.derive_connections` (frozen
   dataclasses rendered to dicts, tuple fields rendered as JSON arrays).
-* ``GET /api/meta`` → ``{"sources": [...], "types": [...], "machines": [...]}``
+* ``GET /api/meta`` →
+  ``{"sources": [...], "projects": [...], "types": [...], "machines": [...]}``
   — the sorted distinct values present in the ledger, for filter controls.
 
 Unknown paths return ``404`` and non-``GET`` methods return ``405``; both as a
@@ -36,6 +38,7 @@ small JSON error body.
 from __future__ import annotations
 
 import json
+import re
 import webbrowser
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -80,6 +83,33 @@ def _single(query: dict[str, list[str]], key: str) -> str | None:
     return value if value.strip() else None
 
 
+def _project_of(source: str) -> str:
+    """Derive a coarse *project* key from an event ``source``.
+
+    Events from one logical project arrive under several source strings — the
+    repo basename varies by working directory (``festcal`` / ``festcal-service``
+    / ``FestCal``), and an explicit emit may set its own. We group them by the
+    leading alphanumeric token, case-folded: all three festcal sources collapse
+    to ``"festcal"``. Purely derived — there is no per-project table to keep in
+    sync. A source with no alphanumeric content yields ``""`` (grouping such
+    sources together rather than erroring).
+    """
+    tokens = re.findall(r"[a-z0-9]+", source.lower())
+    return tokens[0] if tokens else ""
+
+
+def _filter_by_project(events: list[Any], project: str | None) -> list[Any]:
+    """Keep only events whose derived project matches ``project`` (no-op if None).
+
+    Project is a viz-level grouping over the generic ``source`` field, so it is
+    applied here as a post-filter rather than pushed into the core
+    :class:`Query` (which the reusable ledger owns and keeps project-agnostic).
+    """
+    if project is None:
+        return events
+    return [e for e in events if _project_of(e.source) == project]
+
+
 def _query_from_params(query: dict[str, list[str]]) -> Query:
     """Build a :class:`Query` from the parsed query-string parameters."""
     return Query(
@@ -121,6 +151,7 @@ def _events_payload(root: Path, query: dict[str, list[str]]) -> dict[str, Any]:
     """Build the ``/api/events`` payload for the given filters."""
     store = LedgerStore(root=root)
     events = query_events(store.iter_events(), _query_from_params(query))
+    events = _filter_by_project(events, _single(query, "project"))
     events = _apply_limit(events, _limit_from_params(query))
     dicts = [e.to_dict() for e in events]
     return {"count": len(dicts), "events": dicts}
@@ -136,6 +167,7 @@ def _spans_payload(root: Path, query: dict[str, list[str]]) -> dict[str, Any]:
     """
     store = LedgerStore(root=root)
     events = query_events(store.iter_events(), _query_from_params(query))
+    events = _filter_by_project(events, _single(query, "project"))
     connections = derive_connections(events)
     return {
         "spans": [asdict(span) for span in connections.spans],
@@ -147,14 +179,17 @@ def _meta_payload(root: Path) -> dict[str, Any]:
     """Build the ``/api/meta`` payload: sorted distinct sources/types/machines."""
     store = LedgerStore(root=root)
     sources: set[str] = set()
+    projects: set[str] = set()
     types: set[str] = set()
     machines: set[str] = set()
     for event in store.iter_events():
         sources.add(event.source)
+        projects.add(_project_of(event.source))
         types.add(event.type)
         machines.add(event.machine)
     return {
         "sources": sorted(sources),
+        "projects": sorted(projects),
         "types": sorted(types),
         "machines": sorted(machines),
     }
