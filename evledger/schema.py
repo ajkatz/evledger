@@ -108,6 +108,10 @@ class LedgerEvent:
     datacontenttype: str = DEFAULT_CONTENT_TYPE
     data: Any | None = None
     seq: int | None = None
+    #: Optional CloudEvents ``subject`` — a short human-readable headline for the
+    #: event (e.g. ``"festcal · db-storage shipped"``). Producers set it so a
+    #: dashboard can label a row without unpacking ``data``.
+    subject: str | None = None
 
     def with_seq(self, seq: int) -> LedgerEvent:
         """Return a copy of this event with ``seq`` set (original unchanged)."""
@@ -127,6 +131,8 @@ class LedgerEvent:
             "time": self.time,
             "datacontenttype": self.datacontenttype,
         }
+        if self.subject is not None:
+            out["subject"] = self.subject
         if self.data is not None:
             out["data"] = self.data
         out["machine"] = self.machine
@@ -157,6 +163,7 @@ class LedgerEvent:
             datacontenttype=payload.get("datacontenttype", DEFAULT_CONTENT_TYPE),
             data=payload.get("data"),
             seq=payload.get("seq"),
+            subject=payload.get("subject"),
         )
 
     def to_jsonl_line(self) -> str:
@@ -182,13 +189,15 @@ def new_event(
     datacontenttype: str = DEFAULT_CONTENT_TYPE,
     id: str | None = None,
     time: str | None = None,
+    subject: str | None = None,
 ) -> LedgerEvent:
     """Create a new :class:`LedgerEvent`, filling in generated defaults.
 
     ``id`` defaults to a fresh uuid4 hex string and ``time`` to the current
     UTC instant (``Z``-suffixed). ``seq`` is left ``None`` for the store to
     assign at append time. Pass ``id`` / ``time`` explicitly for
-    deterministic construction (e.g. in tests or re-ingestion).
+    deterministic construction (e.g. in tests or re-ingestion). ``subject`` is
+    an optional human-readable headline for the event.
     """
     return LedgerEvent(
         source=source,
@@ -198,4 +207,5 @@ def new_event(
         time=time if time is not None else format_time(now_utc()),
         datacontenttype=datacontenttype,
         data=data,
+        subject=subject,
     )

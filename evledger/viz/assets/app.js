@@ -1391,6 +1391,10 @@
       const tdType = document.createElement("td");
       tdType.textContent = ev.type != null ? ev.type : "";
 
+      const tdSubject = document.createElement("td");
+      tdSubject.className = "subject-cell";
+      tdSubject.textContent = ev.subject != null ? ev.subject : "";
+
       const tdMachine = document.createElement("td");
       tdMachine.textContent = ev.machine != null ? ev.machine : "";
 
@@ -1402,7 +1406,7 @@
       tdData.className = "data-cell";
       tdData.textContent = formatData(ev.data);
 
-      tr.append(tdTime, tdSource, tdType, tdMachine, tdSeq, tdData);
+      tr.append(tdTime, tdSource, tdType, tdSubject, tdMachine, tdSeq, tdData);
       tr.addEventListener("click", () => focusEvent(ev.id));
       frag.appendChild(tr);
     }

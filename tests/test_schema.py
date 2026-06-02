@@ -182,6 +182,26 @@ def test_to_dict_omits_seq_when_none() -> None:
     assert "seq" not in event.to_dict()
 
 
+def test_to_dict_omits_subject_when_none() -> None:
+    event = new_event(source="/m/s", type="t", machine="m")
+
+    assert "subject" not in event.to_dict()
+
+
+def test_subject_roundtrips_through_dict() -> None:
+    event = new_event(
+        source="festcal",
+        type="dev.claude.task.shipped",
+        machine="laptop",
+        data={"task": "db-storage"},
+        subject="festcal · db-storage shipped",
+    ).with_seq(7)
+
+    out = event.to_dict()
+    assert out["subject"] == "festcal · db-storage shipped"
+    assert LedgerEvent.from_dict(out) == event
+
+
 def test_with_seq_returns_new_event_leaving_original_unchanged() -> None:
     event = new_event(source="/m/s", type="t", machine="m")
 
